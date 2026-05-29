@@ -1,43 +1,70 @@
+import os
 import streamlit as st
 from google import genai
 
-client = genai.Client(api_key="YOUR_API_KEY_HERE")
+# Page settings
+st.set_page_config(
+    page_title="AI Resume Analyzer",
+    page_icon="🤖",
+    layout="centered"
+)
 
+# Gemini client
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
+# Title
 st.title("🤖 AI Resume Analyzer")
+st.markdown("Analyze resumes against job descriptions using Gemini AI")
 
-resume_file = st.file_uploader("Upload Resume", type=["txt"])
-job_desc = st.text_area("Paste Job Description")
+# Resume upload
+resume_file = st.file_uploader(
+    "📄 Upload Resume (.txt)",
+    type=["txt"]
+)
 
-if st.button("Analyze Resume"):
+# Job description
+job_desc = st.text_area(
+    "💼 Paste Job Description",
+    height=200
+)
+
+# Analyze button
+if st.button("🚀 Analyze Resume"):
 
     if resume_file and job_desc:
 
-        resume = resume_file.read().decode("utf-8")
+        with st.spinner("Analyzing resume..."):
 
-        prompt = f"""
-        You are an expert HR AI assistant.
+            resume = resume_file.read().decode("utf-8")
 
-        Resume:
-        {resume}
+            prompt = f"""
+            You are an expert HR AI assistant.
 
-        Job Description:
-        {job_desc}
+            Compare the resume with the job description.
 
-        Give:
-        1. Match score
-        2. Matched skills
-        3. Missing skills
-        4. Suggestions
-        5. Recommendation
-        """
+            Return:
+            1. Match score
+            2. Matched skills
+            3. Missing skills
+            4. Suggestions
+            5. Hiring recommendation
 
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt
-        )
+            Resume:
+            {resume}
 
-        st.subheader("AI Analysis")
-        st.write(response.text)
+            Job Description:
+            {job_desc}
+            """
+
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt
+            )
+
+            st.success("Analysis Complete ✅")
+
+            st.subheader("📊 AI Analysis Result")
+            st.write(response.text)
 
     else:
-        st.warning("Please upload resume and job description")
+        st.warning("Please upload resume and enter job description.")
